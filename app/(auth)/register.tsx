@@ -5,10 +5,11 @@ import { TextInput } from 'react-native-paper';
 
 import { Text, View, Button } from '../../components/Themed';
 import ErrorDisplay from '../../components/general/Loading/ErrorDisplay';
-import { auth } from '../../firebaseConfig';
+import { auth, firestore } from '../../firebaseConfig';
 import errorHandler from '../../helpers/errorHandlerFireStore';
 import { UserContext } from '../../context/AuthContext';
 import { useRouter } from 'expo-router';
+import { doc, setDoc } from 'firebase/firestore';
 
 export default function Register() {
   const [name, setName] = React.useState('');
@@ -23,18 +24,27 @@ export default function Register() {
 
   const router = useRouter();
 
-  const registerUser = async () => {
+  const registerUser = async (name: string) => {
     setError('');
     setLoading(true);
-    await createUserWithEmailAndPassword(auth, email, password)
-      .then((userCredential) => {
-        setUser(userCredential.user);
-        router.push('/(chat)');
-      })
-      .catch((error) => {
-        setError(errorHandler(error));
+    try {
+      const res = await createUserWithEmailAndPassword(auth, email, password);
+
+      await setDoc(doc(firestore, 'users', res.user.uid), {
+        uid: res.user.uid,
+        displayName: name.toLowerCase(),
+        email: res.user.email,
+        photoUrl: '',
       });
-    setLoading(false);
+      setUser(res.user);
+      router.push('/(chat)/chats');
+
+      setLoading(false);
+    } catch (error) {
+      setError(errorHandler(error));
+
+      setLoading(false);
+    }
   };
 
   return (
@@ -68,7 +78,7 @@ export default function Register() {
         />
       </View>
       <View>
-        <Button mode="contained" onPress={() => registerUser()}>
+        <Button mode="contained" onPress={() => registerUser(name)}>
           {loading ? 'Loading...' : 'Register'}
         </Button>
         <ErrorDisplay message={error} />

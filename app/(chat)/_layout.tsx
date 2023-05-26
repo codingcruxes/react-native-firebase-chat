@@ -19,7 +19,13 @@ export default function TabLayout() {
         headerTintColor: '#ffffff',
       }}>
       <Tabs.Screen
-        name="index"
+        name="chats"
+        options={{
+          tabBarIcon: ({ color }) => <TabBarIcon name="message" color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="messages"
         options={{
           title: 'Messages',
           tabBarIcon: ({ color }) => <TabBarIcon name="account" color={color} />,
@@ -40,12 +46,6 @@ export default function TabLayout() {
               </TouchableOpacity>
             </View>
           ),
-        }}
-      />
-      <Tabs.Screen
-        name="chat"
-        options={{
-          tabBarIcon: ({ color }) => <TabBarIcon name="message" color={color} />,
         }}
       />
     </Tabs>

@@ -33,7 +33,7 @@ export default function Login() {
     await signInWithEmailAndPassword(auth, email, password)
       .then((userCredential) => {
         setUser(userCredential.user);
-        router.push('/(chat)');
+        router.push('/(chat)/chats');
       })
       .catch((error) => {
         setError(errorHandler(error));

@@ -1,6 +1,7 @@
 {
   "expo": {
     "name": "react-native-firebase-chat",
+    "scheme": "react-native-firebase-chat",
     "slug": "react-native-firebase-chat",
     "version": "1.0.0",
     "orientation": "portrait",
