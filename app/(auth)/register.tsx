@@ -1,4 +1,4 @@
-import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import * as React from 'react';
 import { StyleSheet } from 'react-native';
 import { TextInput } from 'react-native-paper';
@@ -36,6 +36,10 @@ export default function Register() {
         email: res.user.email,
         photoUrl: '',
       });
+
+      if (auth.currentUser)
+        await updateProfile(auth.currentUser, { displayName: name.toLowerCase() });
+
       setUser(res.user);
       router.push('/(chat)/chats');
 

@@ -5,18 +5,18 @@ import {
   getDoc,
   getDocs,
   query,
+  setDoc,
   updateDoc,
   where,
 } from 'firebase/firestore';
 import { Button, Text, View } from '../../components/Themed';
 import { firestore } from '../../firebaseConfig';
 import { UserInfo } from '../../types';
-import React, { useContext } from 'react';
+import React from 'react';
 import { TextInput } from 'react-native-paper';
 import { colorsOfTheYear } from '../../constants/Colors';
 import { UserContext } from '../../context/AuthContext';
 import { useRouter } from 'expo-router';
-import uuid from 'react-native-uuid';
 
 export default function NewChat() {
   const [search, setSearch] = React.useState('');
@@ -32,7 +32,6 @@ export default function NewChat() {
       const list = [] as UserInfo[];
       querySnapshot.forEach((doc) => list.push(doc.data() as UserInfo));
       setResults(list);
-      console.log(list);
     } catch (err) {
       console.log('error', err);
     }
@@ -55,9 +54,20 @@ function SearchResult({ username, id, email }: { username: string; id: string; e
   const onStartChat = async () => {
     if (user) {
       const ref = doc(firestore, 'users', user.uid);
-      console.log(user.uid, id, user.uid > id ? user.uid + id : id + user.uid);
+      const newRoomId = user.uid > id ? user.uid + id : id + user.uid;
       await updateDoc(ref, {
-        rooms: arrayUnion(user.uid > id ? user.uid + id : id + user.uid),
+        rooms: arrayUnion(newRoomId),
+      });
+      const roomRef = doc(firestore, 'rooms', newRoomId);
+      const res = await getDoc(roomRef);
+      if (res.exists()) {
+        router.replace(`/(chat)/messages?id=${newRoomId}`);
+        return;
+      }
+      await setDoc(roomRef, {
+        messages: arrayUnion(),
+        users: arrayUnion({ username: user.displayName }, { username: username }),
+        color: colorsOfTheYear[Math.floor(Math.random() * colorsOfTheYear.length)],
       });
     } else {
       router.push('/');

@@ -1,25 +1,57 @@
 import { StyleSheet, TouchableOpacity } from 'react-native';
 import { Text, View } from './Themed';
 import { useRouter } from 'expo-router';
+import { doc, onSnapshot } from 'firebase/firestore';
+import { firestore } from '../firebaseConfig';
+import React from 'react';
+
+type Room = {
+  lastMessage: { text: string; user: { name: string } };
+  users: { username: string }[];
+  color: string;
+};
 
 interface Props {
-  name: string;
-  lastMessage: string;
-  color: string;
-  id: string;
+  roomId: string;
 }
 
-export default function ChatGroup({ name, lastMessage, color, id }: Props) {
+export default function ChatGroup({ roomId }: Props) {
+  const [data, setData] = React.useState<Room | null>(null);
   const router = useRouter();
+
+  React.useEffect(() => {
+    const docRef = doc(firestore, 'rooms', roomId);
+    const unsub = onSnapshot(docRef, (doc) => {
+      doc.exists() && setData(doc.data() as Room);
+    });
+
+    return () => {
+      unsub();
+    };
+  }, [roomId]);
+
   return (
-    <TouchableOpacity onPress={() => router.push(`/(chat)/messages?id=${id}`)}>
+    <TouchableOpacity onPress={() => router.push(`/(chat)/messages?id=${roomId}`)}>
       <View style={styles.container}>
-        <View style={{ ...styles.circle, backgroundColor: color }}>
-          <Text variant="titleLarge">{name.slice(0, 1).toLocaleUpperCase()}</Text>
+        <View
+          style={{
+            ...styles.circle,
+            backgroundColor: data?.color ? data.color : '#FF6F61',
+          }}>
+          <Text variant="titleLarge">
+            {data?.lastMessage?.user?.name
+              ? data?.lastMessage.user.name.slice(0, 1).toLocaleUpperCase()
+              : ''}
+          </Text>
         </View>
         <View>
-          <Text variant="titleMedium">{name}</Text>
-          <Text>{lastMessage.length > 40 ? lastMessage.slice(0, 40) + '...' : lastMessage}</Text>
+          <Text variant="titleMedium">{data?.users.map((user) => user.username).join(', ')}</Text>
+          <Text>
+            {data?.lastMessage?.text &&
+              (data?.lastMessage.text.length > 40
+                ? data.lastMessage.text.slice(0, 40) + '...'
+                : data.lastMessage.text)}
+          </Text>
         </View>
       </View>
     </TouchableOpacity>

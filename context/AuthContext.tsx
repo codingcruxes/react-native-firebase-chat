@@ -3,7 +3,7 @@ import { AuthReducer, ReducerActions } from './AuthReducer';
 import { User } from 'firebase/auth';
 
 export interface ConfigContextProps {
-  user: User | null;
+  user: User;
   setUser: (user: User) => void;
   clearUser: () => void;
 }
@@ -11,11 +11,11 @@ export interface ConfigContextProps {
 export const UserContext = createContext<ConfigContextProps>({} as ConfigContextProps);
 
 export interface ContextState {
-  user: User | null;
+  user: User;
 }
 
 const INITIAL_STATE: ContextState = {
-  user: null,
+  user: {} as User,
 };
 
 export const ContextProvider: FC<{ children: React.ReactNode }> = ({ children }) => {

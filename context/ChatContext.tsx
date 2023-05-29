@@ -1,5 +1,4 @@
 import { createContext, FC, useMemo, useReducer } from 'react';
-import { User } from 'firebase/auth';
 
 export enum ChatReducer {
   setUser = 'set-user',

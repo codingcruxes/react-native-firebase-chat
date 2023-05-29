@@ -1,17 +1,13 @@
 import { useRouter } from 'expo-router';
-import { signInWithEmailAndPassword } from 'firebase/auth';
 import React, { useContext } from 'react';
-import { ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
-import { TextInput } from 'react-native-paper';
+import { ScrollView, StyleSheet } from 'react-native';
+import { FAB } from 'react-native-paper';
 
-import { Text, View, Button } from '../../components/Themed';
-import ErrorDisplay from '../../components/general/Loading/ErrorDisplay';
+import { Text, View } from '../../components/Themed';
 import { auth, firestore } from '../../firebaseConfig';
-import errorHandler from '../../helpers/errorHandlerFireStore';
 import ChatGroup from '../../components/ChatGroup';
-import { colorsOfTheYear } from '../../constants/Colors';
 import { UserContext } from '../../context/AuthContext';
-import { collection, getDocs, query, where } from 'firebase/firestore';
+import { doc, onSnapshot } from 'firebase/firestore';
 
 interface SubmitParam {
   email: string;
@@ -20,46 +16,41 @@ interface SubmitParam {
 }
 
 export default function Room() {
+  const [rooms, setRooms] = React.useState([]);
   const { user } = useContext(UserContext);
+  const router = useRouter();
 
-  // React.useEffect(() => {
-  //   const getRecords = async () => {
-  //     const q = query(collection(firestore, 'users'));
-  //     try {
-  //       const querySnap = await getDocs(q);
-  //       const list = [] as UserType[];
-  //       querySnap.forEach((doc) => list.push(doc.data() as UserType));
-  //       setUsers(list);
-  //     } catch (error) {
-  //       console.log('ERROR', error);
-  //     }
-  //   };
+  React.useEffect(() => {
+    const userRef = doc(firestore, 'users', user.uid);
 
-  //   getRecords();
-  // }, []);
+    const unSub = onSnapshot(userRef, (doc) => {
+      doc.exists() && setRooms(doc.data().rooms);
+    });
+
+    return () => {
+      unSub();
+    };
+  }, []);
 
   return (
     <View style={styles.container}>
       <ScrollView>
-        <ChatGroup
-          name="Colin Hale"
-          lastMessage="This is the last message"
-          color={colorsOfTheYear[0]}
-          id="colin"
-        />
-        <ChatGroup
-          name="Kevyn Hale"
-          lastMessage="This is the last message This message is a bit longer then the others though"
-          color={colorsOfTheYear[2]}
-          id="kevyn"
-        />
-        <ChatGroup
-          name="Tyson Hale"
-          lastMessage="This is the last message"
-          color={colorsOfTheYear[1]}
-          id="tyson"
-        />
+        {rooms ? (
+          rooms.map((room) => <ChatGroup roomId={room} key={room} />)
+        ) : (
+          <View
+            style={{
+              padding: 6,
+              borderRadius: 6,
+              borderWidth: 1,
+              borderColor: '#ffffff60',
+              margin: 20,
+            }}>
+            <Text>You aren't in any rooms. Press the "+" to start a chat.</Text>
+          </View>
+        )}
       </ScrollView>
+      <FAB icon="plus" style={styles.fab} onPress={() => router.push('/(chat)/newChat')} />
     </View>
   );
 }
@@ -67,5 +58,12 @@ export default function Room() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  fab: {
+    position: 'absolute',
+    margin: 16,
+    right: 0,
+    bottom: 0,
+    borderRadius: 100,
   },
 });
